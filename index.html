@@ -596,6 +596,7 @@
             
             checkAdmin();
             loadData();
+            loadLogo(); // লোগো লোড করার নতুন ফাংশন
         });
 
         window.onpopstate = function(event) {
@@ -976,22 +977,54 @@
         }
         function getTypeName(type) { return type === 'course' ? 'কোর্স' : type === 'ebook' ? 'ই-বুক' : 'হার্ডকপি'; }
 
-        // ================= LOGO MANAGEMENT SYSTEM =================
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedLogo = localStorage.getItem('site_logo');
-            if (savedLogo) {
-                document.getElementById('siteLogo').src = savedLogo;
+        // ================= LOGO MANAGEMENT SYSTEM (UPDATED FOR FIREBASE) =================
+        
+        // 1. লোগো লোড করার নতুন লজিক: Database থেকে আনবে
+        function loadLogo() {
+            if (!isDummyConfig && db) {
+                db.collection("settings").doc("siteConfig").onSnapshot(doc => {
+                    if (doc.exists && doc.data().logo) {
+                        document.getElementById('siteLogo').src = doc.data().logo;
+                        // Backup to local storage for faster load next time (optional)
+                        localStorage.setItem('site_logo', doc.data().logo);
+                    }
+                });
+            } else {
+                // Fallback for offline/dummy config
+                const savedLogo = localStorage.getItem('site_logo');
+                if (savedLogo) {
+                    document.getElementById('siteLogo').src = savedLogo;
+                }
             }
-        });
+        }
 
+        // 2. লোগো আপলোড করার নতুন লজিক: Database এ সেভ করবে
         function handleLogoUpload(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const base64Logo = e.target.result;
+                    
+                    // সাথে সাথেই প্রিভিউ দেখাবে
                     document.getElementById('siteLogo').src = base64Logo;
-                    localStorage.setItem('site_logo', base64Logo);
-                    alert("লোগো সফলভাবে আপডেট হয়েছে!");
+
+                    // Firebase এ সেভ করবে
+                    if (!isDummyConfig && db) {
+                        db.collection("settings").doc("siteConfig").set({
+                            logo: base64Logo
+                        }, { merge: true })
+                        .then(() => {
+                            alert("লোগো সফলভাবে সকল ডিভাইসের জন্য আপডেট হয়েছে!");
+                        })
+                        .catch((error) => {
+                            console.error("Logo upload failed: ", error);
+                            alert("লোগো আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+                        });
+                    } else {
+                        // Firebase না থাকলে লোকাল স্টোরেজ (আগের মতো)
+                        localStorage.setItem('site_logo', base64Logo);
+                        alert("লোগো লোকাল স্টোরেজে সেভ হয়েছে (Firebase কানেক্টেড নয়)।");
+                    }
                 }
                 reader.readAsDataURL(input.files[0]);
             }
