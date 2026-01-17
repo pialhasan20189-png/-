@@ -47,8 +47,18 @@
             --success: #27ae60;
         }
 
+        /* Disable Selection for Security */
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            min-height: 100vh;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Hind Siliguri', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        body { background-color: var(--bg-body); color: var(--text-main); overflow-x: hidden; min-height: 100vh; }
 
         /* --- Navbar --- */
         nav {
@@ -90,13 +100,22 @@
         .admin-trigger {
             font-size: 0.9rem; font-weight: 600; color: var(--text-main); 
             cursor: pointer; padding: 8px 16px; border: 1px solid var(--primary); border-radius: 6px; 
+            display: flex; align-items: center; gap: 6px;
         }
         .admin-trigger:hover { background: var(--primary); color: white; }
 
-        /* ANALYTICS BUTTON (New) */
+        /* ANALYTICS BUTTON STYLES & MOBILE FIX */
         #analyticsBtn { display: none; background: var(--success); color: white; border-color: var(--success); }
         #analyticsBtn:hover { background: #27ae60; }
-        .admin-mode #analyticsBtn { display: block; }
+        .admin-mode #analyticsBtn { display: flex; }
+
+        /* Problem 1 Fix: Mobile Analytics Button */
+        @media (max-width: 600px) {
+            #analyticsBtn span { display: none; } /* Hide the text "Analytics" */
+            #analyticsBtn { padding: 8px 10px; } /* Adjust padding for icon only */
+            .nav-right { gap: 8px; } /* Reduce gap slightly on mobile */
+            .admin-trigger { padding: 8px 10px; font-size: 0.8rem; }
+        }
 
         /* --- LOADER --- */
         .loader {
@@ -329,8 +348,13 @@
         }
         .reset-btn:hover { background: #c0392b; }
 
+        /* Problem 3 Fix: Better Alignment */
         .analytics-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+        }
+        
+        .analytics-title-group {
+            display: flex; align-items: center; gap: 10px;
         }
 
         @media (max-width: 600px) {
@@ -343,14 +367,14 @@
             .sp-desc { font-size: 1rem; line-height: 1.5; }
             
             /* Analytics Mobile Tweaks */
-            .analytics-header { flex-direction: column; align-items: flex-start; }
+            .analytics-header { flex-direction: column; align-items: stretch; }
             .reset-btn { width: 100%; justify-content: center; margin-left: 0; }
+            .analytics-title-group { justify-content: center; }
+            .back-btn { justify-content: center; }
         }
     </style>
 </head>
-<body>
-
-    <nav>
+<body oncontextmenu="return false;"> <nav>
         <div class="nav-left">
             <div class="logo-container">
                 <img id="siteLogo" src="https://via.placeholder.com/150x50?text=Upload+Logo" alt="PC Master Academy" class="logo-img" onclick="closeDetailsView()">
@@ -362,7 +386,9 @@
         </div>
         <div class="nav-right">
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
-            <div class="admin-trigger" onclick="openAnalytics()" id="analyticsBtn"><i class="fas fa-chart-line"></i> Analytics</div>
+            <div class="admin-trigger" onclick="openAnalytics()" id="analyticsBtn">
+                <i class="fas fa-chart-line"></i> <span>Analytics</span>
+            </div>
             <div class="admin-trigger" onclick="openLoginModal()" id="loginBtn">Admin</div>
             <div class="admin-trigger" onclick="logout()" id="logoutBtn" style="display:none; background:#ff4757; border-color:#ff4757; color:white;">Logout</div>
         </div>
@@ -421,10 +447,14 @@
     <div id="analyticsSection">
         <div style="padding: 0 20px;">
             <div class="analytics-header">
-                <div onclick="closeAnalytics()" class="back-btn"><i class="fas fa-arrow-left"></i> ড্যাশবোর্ডে ফিরে যান</div>
-                <h2 style="display:flex; align-items:center; gap:10px; color: var(--text-main);">
-                    <i class="fas fa-chart-line" style="color:var(--success);"></i> লাইভ অ্যানালিটিক্স
-                </h2>
+                <div onclick="closeAnalytics()" class="back-btn" style="margin-bottom: 0;"><i class="fas fa-arrow-left"></i> ড্যাশবোর্ডে ফিরে যান</div>
+                
+                <div class="analytics-title-group">
+                    <h2 style="display:flex; align-items:center; gap:10px; color: var(--text-main); margin: 0;">
+                        <i class="fas fa-chart-line" style="color:var(--success);"></i> লাইভ অ্যানালিটিক্স
+                    </h2>
+                </div>
+                
                 <button onclick="resetAnalyticsData()" class="reset-btn">
                     <i class="fas fa-trash-alt"></i> রিসেট অ্যানালিটিক্স
                 </button>
@@ -543,6 +573,15 @@
         const isDummyConfig = firebaseConfig.apiKey === "YOUR_API_KEY";
         let db = null;
 
+        // Problem 4: Security (Prevent Inspect/Copy)
+        document.onkeydown = function(e) {
+            if(event.keyCode == 123) { return false; } // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 if (typeof firebase !== 'undefined' && firebase.apps && !firebase.apps.length) {
@@ -554,7 +593,7 @@
             checkAdmin();
             loadData();
             loadLogo();
-            trackSiteVisit(); // Track visitor on load
+            trackSiteVisit(); 
         });
 
         window.onpopstate = function(event) {
@@ -568,12 +607,20 @@
         let allProducts = [];
         let currentImgBase64 = "";
         let selectedProductForBuy = null; 
-
-        // ================= ANALYTICS SYSTEM (NEW) =================
         
-        // 1. Track Total Site Visits (Auto Reset Daily)
+        // Problem 4: Scroll Position Variable
+        let lastScrollPosition = 0;
+
+        // ================= ANALYTICS SYSTEM =================
+        
+        // Problem 2 Fix: Track Total Site Visits (Session Based)
         function trackSiteVisit() {
             if (isDummyConfig || !db) return;
+            
+            // Check if user already visited in this session
+            if (sessionStorage.getItem('visited_this_session')) {
+                return; // Do nothing if already counted this session
+            }
             
             const today = new Date().toISOString().split('T')[0];
             const statsRef = db.collection("analytics").doc("site_stats");
@@ -585,7 +632,6 @@
                     } else {
                         const data = sfDoc.data();
                         if (data.date !== today) {
-                            // Reset for new day
                             transaction.update(statsRef, { date: today, visitors: 1 });
                         } else {
                             const newCount = (data.visitors || 0) + 1;
@@ -593,10 +639,12 @@
                         }
                     }
                 });
+            }).then(() => {
+                // Set flag so we don't count again until browser/tab closes
+                sessionStorage.setItem('visited_this_session', 'true');
             }).catch(console.error);
         }
 
-        // 2. Track Product Click (Auto Reset Daily)
         function trackProductView(productId) {
             if (isDummyConfig || !db) return;
 
@@ -610,7 +658,6 @@
                     const data = doc.data();
                     let newViews = 1;
 
-                    // If date matches, increment, else reset to 1
                     if (data.viewDate === today) {
                         newViews = (data.dailyViews || 0) + 1;
                     }
@@ -623,11 +670,9 @@
             }).catch(console.error);
         }
 
-        // 3. Open Analytics View (Updated: Section based)
         let analyticsUnsubscribe = null;
 
         function openAnalytics() {
-            // Hide Home, Show Analytics Section
             document.getElementById('homeSection').style.display = 'none';
             document.getElementById('singleProductView').style.display = 'none';
             document.getElementById('analyticsSection').style.display = 'block';
@@ -635,7 +680,6 @@
 
             if (isDummyConfig || !db) return;
 
-            // Load Site Visitors
             db.collection("analytics").doc("site_stats").onSnapshot(doc => {
                 const today = new Date().toISOString().split('T')[0];
                 if(doc.exists && doc.data().date === today) {
@@ -645,21 +689,18 @@
                 }
             });
 
-            // Load Top Products
             analyticsUnsubscribe = db.collection("products").onSnapshot(snapshot => {
                 const today = new Date().toISOString().split('T')[0];
                 let products = [];
                 
                 snapshot.forEach(doc => {
                     const d = doc.data();
-                    // Only count views from today
                     const views = (d.viewDate === today) ? (d.dailyViews || 0) : 0;
                     if(views > 0) {
                         products.push({ title: d.title, type: d.type, views: views });
                     }
                 });
 
-                // Sort Descending
                 products.sort((a, b) => b.views - a.views);
 
                 const tbody = document.getElementById('analyticsTableBody');
@@ -687,24 +728,20 @@
             document.getElementById('homeSection').style.display = 'block';
         }
 
-        // 4. Reset Analytics Data (NEW FEATURE)
         function resetAnalyticsData() {
             if(!confirm("আপনি কি নিশ্চিত যে আপনি অ্যানালিটিক্স রিসেট করতে চান? এটি আজকের সমস্ত ডাটা মুছে ফেলবে।")) return;
 
             if (isDummyConfig || !db) {
-                alert("ডেমো মোডে কাজ করছে না।"); // Or handle localStorage reset
+                alert("ডেমো মোডে কাজ করছে না।");
                 return;
             }
 
-            // Reset Site Stats
             const today = new Date().toISOString().split('T')[0];
             const statsRef = db.collection("analytics").doc("site_stats");
             statsRef.update({ visitors: 0 }).then(() => {
                 console.log("Site stats reset");
             });
 
-            // Reset Product Views (Batch Update is ideal, but for simplicity looping mostly works for small scale)
-            // Note: Reading all products and updating them.
             db.collection("products").get().then(snapshot => {
                 const batch = db.batch();
                 snapshot.docs.forEach(doc => {
@@ -747,8 +784,6 @@
             const productId = urlParams.get('id');
 
             document.getElementById('loading').style.display = 'none';
-
-            // Ensure Analytics is closed on route change
             document.getElementById('analyticsSection').style.display = 'none';
 
             if (productId) {
@@ -764,13 +799,15 @@
                 else if(activeBtn && activeBtn.innerText.includes('হার্ডকপি')) type = 'hardcopy';
                 
                 renderGrid(type);
-                window.scrollTo(0,0);
+                // Note: Only scroll to top if we are not returning from a product (handled in closeDetailsView)
             }
         }
 
         // ================= DETAILS LOGIC =================
         function openDetails(id) {
-            // Track View Logic Here
+            // Problem 4: Save Scroll Position
+            lastScrollPosition = window.scrollY;
+
             trackProductView(id);
 
             const newUrl = `${window.location.pathname}?id=${id}`;
@@ -829,7 +866,13 @@
 
             document.getElementById('singleProductView').style.display = 'none';
             document.getElementById('homeSection').style.display = 'block';
-            renderGrid('all');
+            
+            renderGrid(document.querySelector('.filter-btn.active') ? 
+                (document.querySelector('.filter-btn.active').innerText.includes('কোর্স') ? 'course' : 'all') 
+                : 'all');
+                
+            // Problem 4: Restore Scroll Position
+            window.scrollTo(0, lastScrollPosition);
         }
 
         // ================= TIMER LOGIC =================
@@ -854,7 +897,19 @@
         function renderGrid(filter) {
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
-            const filtered = filter === 'all' ? allProducts : allProducts.filter(p => p.type === filter);
+            
+            // Re-check filter string logic if needed, simplify here
+            let type = 'all';
+            if(filter !== 'all') type = filter; // passed directly usually
+            else {
+                 // double check UI state
+                 const activeBtn = document.querySelector('.filter-btn.active');
+                 if(activeBtn && activeBtn.innerText.includes('কোর্স')) type = 'course';
+                 else if(activeBtn && activeBtn.innerText.includes('ই-বুক')) type = 'ebook';
+                 else if(activeBtn && activeBtn.innerText.includes('হার্ডকপি')) type = 'hardcopy';
+            }
+
+            const filtered = type === 'all' ? allProducts : allProducts.filter(p => p.type === type);
 
             if(filtered.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;">কোনো তথ্য পাওয়া যায়নি।</div>';
@@ -1075,7 +1130,7 @@
         function closeModal(id) { 
             document.getElementById(id).classList.remove('active');
             if(id === 'analyticsModal' && analyticsUnsubscribe) {
-                analyticsUnsubscribe(); // Stop listening when modal closed to save resources
+                analyticsUnsubscribe(); 
             }
         }
 
