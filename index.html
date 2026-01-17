@@ -57,7 +57,20 @@
             display: flex; justify-content: space-between; align-items: center;
         }
         .nav-left { display: flex; align-items: center; gap: 20px; }
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; cursor: pointer; }
+        
+        .logo { 
+            font-size: clamp(1.2rem, 4vw, 1.6rem); 
+            font-weight: 800; 
+            color: #ff0000; 
+            letter-spacing: -0.5px; 
+            cursor: pointer; 
+            white-space: nowrap; 
+        }
+        
+        [data-theme="dark"] .logo {
+            color: #ffffff; 
+        }
+
         .nav-right { display: flex; align-items: center; gap: 15px; }
         
         .theme-toggle {
@@ -102,11 +115,19 @@
 
         /* --- Filters --- */
         .filter-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; padding: 0 10px; }
+        
         .filter-btn {
             padding: 12px 24px; border: 2px solid var(--primary); background: var(--bg-card);
             border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-main);
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-width: 100px; text-align: center;
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
         }
+        .filter-btn:active {
+            transform: scale(0.95); 
+        }
+
         .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         .filter-btn:hover:not(.active) { background: var(--border); }
 
@@ -119,12 +140,10 @@
             border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);
             position: relative; display: flex; flex-direction: column;
             cursor: pointer; transition: transform 0.2s;
-            /* CRITICAL FIX: Ensure entire card is a clickable zone */
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
 
-        /* Hover only for desktops */
         @media (hover: hover) {
             .card:hover { transform: translateY(-5px); }
             .card:hover .card-img-box img { transform: scale(1.05); }
@@ -139,7 +158,6 @@
             aspect-ratio: 16 / 9; 
             height: auto; 
             background: #eee; position: relative; overflow: hidden; 
-            /* Fix: Allow clicks to pass through */
             pointer-events: none; 
         }
         .card-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
@@ -149,13 +167,18 @@
             background: var(--primary); color: white;
             padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; z-index: 2;
         }
+        
         .discount-badge {
-            position: absolute; top: 10px; right: 10px;
-            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            display: inline-flex;
+            align-items: center;
+            background: #ff0000; /* Pure Red */
             color: white;
-            padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; z-index: 2;
-            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
-            border: 2px solid white;
+            padding: 2px 6px; 
+            border-radius: 3px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            margin-left: 8px; 
+            line-height: 1.2;
         }
 
         .timer-badge {
@@ -165,20 +188,18 @@
             backdrop-filter: blur(2px); letter-spacing: 0.5px;
         }
         
-        /* Edit icon: MUST be clickable separately */
         .edit-icon {
             position: absolute; top: 10px; right: 10px;
             background: white; width: 30px; height: 30px;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             z-index: 50; display: none; color: #333;
-            pointer-events: auto; /* Enable clicks */
+            pointer-events: auto; 
         }
         .admin-mode .edit-icon { display: flex; }
 
         .card-content { 
             padding: 20px; flex-grow: 1; display: flex; flex-direction: column; 
-            /* Fix: Allow clicks to pass through content area */
             pointer-events: none; 
         }
         
@@ -198,7 +219,12 @@
         .price-box { display: flex; flex-direction: column; align-items: flex-start; }
         .price { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
         .old-price { font-size: 0.9rem; text-decoration: line-through; color: var(--text-sec); margin-bottom: -5px; }
-        .discount-price { font-size: 1.4rem; font-weight: 800; color: var(--accent-red); }
+        
+        .discount-price { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            color: #ff0000; 
+        }
         
         .details-btn-card {
             padding: 10px 18px; 
@@ -210,7 +236,6 @@
             font-size: 0.9rem;
         }
 
-        /* Fix for Dark Mode Text Color */
         [data-theme="dark"] .details-btn-card {
             color: #ffffff !important;
             border-color: #ffffff;
@@ -219,9 +244,15 @@
         .enroll-btn {
             padding: 10px 20px; background: var(--primary); color: white;
             border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
+            transition: transform 0.1s ease; 
+        }
+        .enroll-btn:active {
+            transform: scale(0.97);
         }
 
-        /* --- Modals (Admin Only) --- */
+        /* --- Modals --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 2000; 
@@ -341,7 +372,7 @@
 
     <nav>
         <div class="nav-left">
-            <div class="logo" onclick="closeDetailsView()">EduPrime</div>
+            <div class="logo" onclick="closeDetailsView()">PC Master Academy</div>
         </div>
         <div class="nav-right">
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
@@ -407,7 +438,7 @@
         <div class="modal">
             <span class="close-btn" onclick="closeModal('loginModal')">&times;</span>
             <h2 style="margin-bottom:20px; text-align:center;">অ্যাডমিন লগইন</h2>
-            <div class="form-group"><label class="form-label">ইমেইল</label><input type="email" id="adminEmail" class="form-control" placeholder="teacher20189@gmail.com"></div>
+            <div class="form-group"><label class="form-label">ইমেইল</label><input type="email" id="adminEmail" class="form-control" placeholder=""></div>
             <div class="form-group"><label class="form-label">পাসওয়ার্ড</label><input type="password" id="adminPass" class="form-control"></div>
             <button onclick="handleLogin()" class="enroll-btn" style="width:100%;">লগইন</button>
         </div>
@@ -580,11 +611,27 @@
             let priceHtml = `<span class="price" style="font-size:2rem;">${item.price}</span>`;
             
             if (item.discountPrice) {
+                
+                // SOLVED: Calculate discount percentage for Single View as well
+                const reg = parseFloat(item.price.replace(/[^\d.]/g, ''));
+                const disc = parseFloat(item.discountPrice.replace(/[^\d.]/g, ''));
+                let discountBadgeHtml = '';
+
+                if(reg && disc && reg > disc) {
+                    const percent = Math.round(((reg - disc) / reg) * 100);
+                    // Badge styled for Single View (sized with the price)
+                    discountBadgeHtml = `<span class="discount-badge" style="font-size: 1rem; padding: 4px 8px; align-self: center;">SAVE ${percent}%</span>`;
+                }
+
+                // SOLVED: "Offer Running" color fixed to #ff0000 and badge added next to price
                 priceHtml = `
                     <div style="display:flex; flex-direction:column;">
                         <span class="old-price" style="font-size:1.2rem;">${item.price}</span>
-                        <span class="discount-price" style="font-size:2.2rem;">${item.discountPrice}</span>
-                        <span style="color:var(--accent-red); font-weight:600; font-size:0.9rem;">অফার চলছে!</span>
+                        <div style="display:flex; gap: 10px; align-items: center;">
+                            <span class="discount-price" style="font-size:2.2rem;">${item.discountPrice}</span>
+                            ${discountBadgeHtml}
+                        </div>
+                        <span style="color:#ff0000; font-weight:600; font-size:0.9rem;">অফার চলছে!</span>
                     </div>
                 `;
             }
@@ -650,7 +697,10 @@
                     priceHtml = `
                         <div class="price-box">
                             <span class="old-price">${item.price}</span>
-                            <span class="discount-price">${item.discountPrice}</span>
+                            <div style="display:flex; align-items:center;">
+                                <span class="discount-price">${item.discountPrice}</span>
+                                ${discountBadgeHtml}
+                            </div>
                         </div>
                     `;
 
@@ -671,13 +721,10 @@
                     ? `<div class="student-count"><i class="fas fa-user-graduate"></i> ${item.studentCount} জন ভর্তি</div>` 
                     : `<div class="student-count"><i class="fas fa-star"></i> নতুন</div>`;
 
-                // --- KEY FIX FOR MOBILE CLICK ---
                 const div = document.createElement('div');
                 div.className = 'card';
                 
-                // We use DIRECT property assignment for reliability on mobile
                 div.onclick = function(e) {
-                    // Stop if clicking the edit icon
                     if(e.target.closest('.edit-icon')) return;
                     openDetails(item.id);
                 };
@@ -686,7 +733,6 @@
                     <div class="edit-icon" onclick="event.stopPropagation(); openEditModal('${item.id}')"><i class="fas fa-pen"></i></div>
                     <div class="card-img-box">
                         <span class="badge">${getTypeName(item.type)}</span>
-                        ${discountBadgeHtml}
                         <img src="${item.image || 'https://via.placeholder.com/300x200?text=No+Image'}" alt="${item.title}">
                         ${timerHtml}
                     </div>
