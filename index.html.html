@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EduPrime Pro - ক্যারিয়ার গড়ার সেরা মাধ্যম</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
+
+    <style>
+        /* --- CSS Variables --- */
+        :root {
+            --primary: #0056b3;
+            --primary-hover: #004494;
+            --accent-red: #e63946; 
+            --bg-body: #f8fbff;
+            --bg-card: #ffffff;
+            --text-main: #0056b3;
+            --text-title: #1a1a1a;
+            --text-sec: #476a8a; 
+            --text-desc: #000000; 
+            --border: #e0e6ed;
+            --shadow: 0 4px 20px rgba(0, 86, 179, 0.08);
+            --modal-bg: #ffffff;
+            --input-bg: #f8fbff;
+        }
+
+        [data-theme="dark"] {
+            --primary: #3a86ff;
+            --primary-hover: #60a5fa;
+            --accent-red: #ff5c5c;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #ffffff;
+            --text-title: #ffffff;
+            --text-sec: #cbd5e1;
+            --text-desc: #e2e8f0; 
+            --border: #334155;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --modal-bg: #1e293b;
+            --input-bg: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Hind Siliguri', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--bg-body); color: var(--text-main); overflow-x: hidden; min-height: 100vh; }
+
+        /* --- Navbar --- */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; cursor: pointer; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-main); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;
+        }
+        .admin-trigger {
+            font-size: 0.9rem; font-weight: 600; color: var(--text-main); 
+            cursor: pointer; padding: 8px 16px; border: 1px solid var(--primary); border-radius: 6px; 
+        }
+        .admin-trigger:hover { background: var(--primary); color: white; }
+
+        /* --- LOADER --- */
+        .loader {
+            width: 40px; aspect-ratio: 1; color: #f03355; position: relative;
+            background: radial-gradient(10px,currentColor 94%,#0000); margin: 0 auto;
+        }
+        .loader:before {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background:
+                radial-gradient(9px at bottom right,#0000 94%,currentColor) top left,
+                radial-gradient(9px at bottom left ,#0000 94%,currentColor) top right,
+                radial-gradient(9px at top right,#0000 94%,currentColor) bottom left,
+                radial-gradient(9px at top left ,#0000 94%,currentColor) bottom right;
+            background-size: 20px 20px; background-repeat: no-repeat;
+            animation: l18 1.5s infinite cubic-bezier(0.3,1,0,1);
+        }
+        @keyframes l18 {
+            33%  {inset:-10px;transform: rotate(0deg)}
+            66%  {inset:-10px;transform: rotate(90deg)}
+            100% {inset:0    ;transform: rotate(90deg)}
+        }
+        #loading {
+            display: flex; justify-content: center; align-items: center;
+            padding: 50px; width: 100%;
+        }
+
+        /* --- Hero --- */
+        .hero { padding: 120px 20px 10px; text-align: center; max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-size: 2.5rem; line-height: 1.3; margin-bottom: 15px; color: var(--text-main); font-weight: 800; }
+        .hero p { color: var(--text-sec); font-size: 1.1rem; margin-bottom: 20px; }
+
+        /* --- Filters --- */
+        .filter-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; padding: 0 10px; }
+        .filter-btn {
+            padding: 12px 24px; border: 2px solid var(--primary); background: var(--bg-card);
+            border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-main);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-width: 100px; text-align: center;
+        }
+        .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .filter-btn:hover:not(.active) { background: var(--border); }
+
+        /* --- Grid & Cards --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 80px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);
+            position: relative; display: flex; flex-direction: column;
+            cursor: pointer; transition: transform 0.2s;
+            /* CRITICAL FIX: Ensure entire card is a clickable zone */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Hover only for desktops */
+        @media (hover: hover) {
+            .card:hover { transform: translateY(-5px); }
+            .card:hover .card-img-box img { transform: scale(1.05); }
+            .card:hover .details-btn-card { 
+                background: var(--primary); 
+                color: white; 
+            }
+        }
+        
+        .card-img-box { 
+            width: 100%; 
+            aspect-ratio: 16 / 9; 
+            height: auto; 
+            background: #eee; position: relative; overflow: hidden; 
+            /* Fix: Allow clicks to pass through */
+            pointer-events: none; 
+        }
+        .card-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        
+        .badge {
+            position: absolute; top: 10px; left: 10px;
+            background: var(--primary); color: white;
+            padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; z-index: 2;
+        }
+        .discount-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: white;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; z-index: 2;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+            border: 2px solid white;
+        }
+
+        .timer-badge {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: rgba(230, 57, 70, 0.95); color: white;
+            text-align: center; padding: 6px; font-size: 0.8rem; font-weight: 700;
+            backdrop-filter: blur(2px); letter-spacing: 0.5px;
+        }
+        
+        /* Edit icon: MUST be clickable separately */
+        .edit-icon {
+            position: absolute; top: 10px; right: 10px;
+            background: white; width: 30px; height: 30px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 50; display: none; color: #333;
+            pointer-events: auto; /* Enable clicks */
+        }
+        .admin-mode .edit-icon { display: flex; }
+
+        .card-content { 
+            padding: 20px; flex-grow: 1; display: flex; flex-direction: column; 
+            /* Fix: Allow clicks to pass through content area */
+            pointer-events: none; 
+        }
+        
+        .card-title { 
+            font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; 
+            color: var(--text-title);
+            line-height: 1.4; 
+        }
+        
+        .student-count {
+            font-size: 0.85rem; color: var(--text-sec); 
+            display: flex; align-items: center; gap: 5px; margin-bottom: 15px; font-weight: 500;
+        }
+
+        .card-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+        
+        .price-box { display: flex; flex-direction: column; align-items: flex-start; }
+        .price { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+        .old-price { font-size: 0.9rem; text-decoration: line-through; color: var(--text-sec); margin-bottom: -5px; }
+        .discount-price { font-size: 1.4rem; font-weight: 800; color: var(--accent-red); }
+        
+        .details-btn-card {
+            padding: 10px 18px; 
+            background: transparent; 
+            color: var(--primary);
+            border: 1px solid var(--primary); 
+            border-radius: 6px; font-weight: 600; cursor: pointer; z-index: 5;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        /* Fix for Dark Mode Text Color */
+        [data-theme="dark"] .details-btn-card {
+            color: #ffffff !important;
+            border-color: #ffffff;
+        }
+
+        .enroll-btn {
+            padding: 10px 20px; background: var(--primary); color: white;
+            border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+        }
+
+        /* --- Modals (Admin Only) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000; 
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+            padding: 10px; 
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--modal-bg); color: var(--text-main);
+            width: 100%; max-width: 500px; padding: 25px; border-radius: 12px;
+            position: relative; border: 1px solid var(--border);
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .close-btn {
+            position: absolute; top: 15px; right: 15px; font-size: 1.2rem; 
+            cursor: pointer; color: #333; z-index: 20;
+            background: rgba(255, 255, 255, 0.9);
+            width: 35px; height: 35px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.2s;
+        }
+        .close-btn:hover { background: var(--accent-red); color: white; transform: rotate(90deg); }
+
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid var(--border);
+            border-radius: 6px; background: var(--input-bg); color: var(--text-main);
+            outline: none; font-size: 1rem;
+        }
+        .form-control:focus { border-color: var(--primary); }
+
+        ::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+        [data-theme="dark"] ::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        .upload-box {
+            border: 2px dashed var(--border); padding: 20px; text-align: center;
+            border-radius: 8px; cursor: pointer; margin-bottom: 15px;
+        }
+        .preview-img { width: 100px; height: 100px; object-fit: cover; display: none; margin: 10px auto; border-radius: 6px; }
+
+        /* FAB */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 55px; height: 55px; background: var(--primary);
+            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: pointer;
+            z-index: 100; display: none; transition: transform 0.2s;
+        }
+        .fab:hover { transform: scale(1.1); }
+        .admin-mode .fab { display: flex; }
+
+        /* --- FULL PAGE VIEW --- */
+        #singleProductView {
+            display: none; 
+            padding-top: 100px; 
+            max-width: 900px; margin: 0 auto; padding-bottom: 50px;
+            min-height: 100vh;
+        }
+        .sp-container {
+            background: var(--bg-card); border-radius: 12px; overflow: hidden;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+        .sp-img-box {
+            width: 100%; max-height: 450px; overflow: hidden; position: relative;
+            display: flex; justify-content: center; background: #000;
+        }
+        .sp-img-box img { width: 100%; height: 100%; object-fit: contain; }
+        .sp-content { padding: 30px; }
+        
+        .sp-desc { 
+            white-space: pre-wrap; 
+            line-height: 1.6; 
+            color: var(--text-desc); 
+            font-size: 1rem; 
+            margin: 20px 0; 
+            text-align: left; 
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        
+        .sp-title { font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 10px; }
+        
+        .sp-meta {
+            display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;
+            border-bottom: 1px solid var(--border); padding-bottom: 20px;
+        }
+        .sp-tag { 
+            background: rgba(0, 86, 179, 0.1); color: var(--primary); 
+            padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;
+        }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-bottom: 20px; color: var(--text-sec);
+            font-weight: 600; cursor: pointer; text-decoration: none;
+            padding: 8px 16px; border: 1px solid var(--border);
+            border-radius: 50px; background: var(--bg-card);
+        }
+        .back-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2rem; }
+            .filter-container { gap: 8px; }
+            .filter-btn { flex: 1 1 45%; } 
+            .modal { padding: 20px; width: 100%; }
+            .sp-title { font-size: 1.5rem; }
+            .sp-content { padding: 20px; }
+            .sp-img-box { max-height: 250px; }
+            .sp-desc { font-size: 1rem; line-height: 1.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <div class="logo" onclick="closeDetailsView()">EduPrime</div>
+        </div>
+        <div class="nav-right">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
+            <div class="admin-trigger" onclick="openLoginModal()" id="loginBtn">Admin</div>
+            <div class="admin-trigger" onclick="logout()" id="logoutBtn" style="display:none; background:#ff4757; border-color:#ff4757; color:white;">Logout</div>
+        </div>
+    </nav>
+
+    <div id="homeSection">
+        <section class="hero">
+            <h1>আপনার স্বপ্নের ক্যারিয়ার গড়ুন <br> সেরা রিসোর্সের সাথে</h1>
+            <p>HSC কোর্স, ই-বুক এবং এক্সক্লুসিভ নোটস - সব এখন এক ক্লিকে।</p>
+        </section>
+
+        <div class="container">
+            <div class="filter-container">
+                <button class="filter-btn active" onclick="filterData('all')">সকল রিসোর্স</button>
+                <button class="filter-btn" onclick="filterData('course')">কোর্স সমূহ</button>
+                <button class="filter-btn" onclick="filterData('ebook')">ই-বুক</button>
+                <button class="filter-btn" onclick="filterData('hardcopy')">হার্ডকপি বই</button>
+            </div>
+
+            <div id="loading">
+                <div class="loader"></div>
+            </div>
+            
+            <div class="grid" id="productGrid"></div>
+        </div>
+    </div>
+
+    <div id="singleProductView">
+        <div style="padding: 0 20px;">
+            <div onclick="closeDetailsView()" class="back-btn"><i class="fas fa-arrow-left"></i> সকল রিসোর্সে ফিরে যান</div>
+            
+            <div class="sp-container">
+                <div class="sp-img-box">
+                    <img id="spImg" src="" alt="Detail Image">
+                </div>
+                <div class="sp-content">
+                    <h1 id="spTitle" class="sp-title"></h1>
+                    <div class="sp-meta">
+                        <span id="spType" class="sp-tag"></span>
+                        <span id="spCount" style="display:flex; align-items:center; gap:5px; color:var(--text-sec); font-weight:500;"></span>
+                    </div>
+
+                    <div id="spPriceBox" style="margin-bottom: 25px;"></div>
+                    
+                    <h3 style="color:var(--text-main); margin-bottom:10px;">বিস্তারিত বিবরণ:</h3>
+                    
+                    <div id="spDesc" class="sp-desc"></div>
+
+                    <button onclick="confirmBuySingle()" class="enroll-btn" style="width:100%; padding:15px; font-size:1.1rem; display:flex; justify-content:center; align-items:center; gap:10px;">
+                        এখনই কিনুন <i class="fas fa-shopping-cart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="fab" onclick="openEditModal()">+</div>
+
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <span class="close-btn" onclick="closeModal('loginModal')">&times;</span>
+            <h2 style="margin-bottom:20px; text-align:center;">অ্যাডমিন লগইন</h2>
+            <div class="form-group"><label class="form-label">ইমেইল</label><input type="email" id="adminEmail" class="form-control" placeholder="teacher20189@gmail.com"></div>
+            <div class="form-group"><label class="form-label">পাসওয়ার্ড</label><input type="password" id="adminPass" class="form-control"></div>
+            <button onclick="handleLogin()" class="enroll-btn" style="width:100%;">লগইন</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
+            <h2 id="modalTitle" style="margin-bottom:20px;">নতুন আইটেম যোগ করুন</h2>
+            <input type="hidden" id="editId">
+            
+            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i> ছবি আপলোড করুন
+                <input type="file" id="fileInput" hidden accept="image/*" onchange="handleImage(this)">
+            </div>
+            <img id="previewImg" class="preview-img">
+
+            <div class="form-group"><label class="form-label">শিরোনাম</label><input type="text" id="inpTitle" class="form-control"></div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div class="form-group" style="flex:1; min-width: 140px;">
+                    <label class="form-label">ধরণ</label>
+                    <select id="inpType" class="form-control">
+                        <option value="course">HSC কোর্স</option>
+                        <option value="ebook">ই-বুক</option>
+                        <option value="hardcopy">হার্ডকপি</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1; min-width: 140px;">
+                    <label class="form-label">রেগুলার দাম</label>
+                    <input type="text" id="inpPrice" class="form-control" placeholder="৳">
+                </div>
+            </div>
+
+            <div style="background: rgba(0, 86, 179, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary);">
+                <h4 style="margin-bottom:10px; color:var(--primary);">স্পেশাল অফার</h4>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1; min-width: 130px;">
+                        <label class="form-label">ডিসকাউন্ট দাম</label>
+                        <input type="text" id="inpDiscount" class="form-control" placeholder="যেমন: 300">
+                    </div>
+                    <div class="form-group" style="flex:1; min-width: 130px;">
+                        <label class="form-label">অফার শেষ হবে</label>
+                        <input type="datetime-local" id="inpDeadline" class="form-control">
+                    </div>
+                </div>
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="inpTimerActive" style="width: 18px; height: 18px;">
+                    <label for="inpTimerActive" style="font-weight: 600; cursor: pointer;">টাইমার চালু রাখুন</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">ভর্তি/বিক্রির সংখ্যা</label>
+                <input type="number" id="inpCount" class="form-control" placeholder="যেমন: 520">
+            </div>
+
+            <div class="form-group"><label class="form-label">বিস্তারিত</label><textarea id="inpDesc" class="form-control" rows="5"></textarea></div>
+
+            <button onclick="saveData()" id="saveBtn" class="enroll-btn" style="width:100%;">সেভ করুন</button>
+            <button onclick="deleteData()" id="deleteBtn" style="width:100%; margin-top:10px; background:#ff4757; color:white; border:none; padding:10px; border-radius:6px; display:none; cursor:pointer;">ডিলিট করুন</button>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIG & INIT =================
+        const firebaseConfig = {
+             apiKey: "AIzaSyBxQdoG_Uu-a5BdK6Oz56WQClkIZraMw7k",
+             authDomain: "landing-page-64354.firebaseapp.com",
+             projectId: "landing-page-64354",
+             storageBucket: "landing-page-64354.firebasestorage.app",
+             messagingSenderId: "162901994412",
+             appId: "1:162901994412:web:a89c09a2b95ddea8c22809"
+        };
+
+        const isDummyConfig = firebaseConfig.apiKey === "YOUR_API_KEY";
+        let db = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (typeof firebase !== 'undefined' && firebase.apps && !firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    if (!isDummyConfig) db = firebase.firestore();
+                }
+            } catch (e) { console.error("Firebase init error:", e); }
+            
+            checkAdmin();
+            loadData();
+        });
+
+        window.onpopstate = function(event) {
+            processRouting(); 
+        };
+
+        // Variables
+        const ADMIN_EMAIL = "teacher20189@gmail.com";
+        const ADMIN_PASS = "teacher20189@";
+        const WHATSAPP_NUM = "8801792595165"; 
+        let allProducts = [];
+        let currentImgBase64 = "";
+        let selectedProductForBuy = null; 
+
+        // ================= DATA LOADING =================
+        function loadData() {
+            document.getElementById('loading').style.display = 'flex';
+            
+            if (!isDummyConfig && typeof firebase !== 'undefined' && db) {
+                db.collection("products").orderBy("timestamp", "desc").onSnapshot(snap => {
+                    allProducts = [];
+                    snap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+                    processRouting(); 
+                }, err => loadFromLocalStorage());
+            } else {
+                loadFromLocalStorage();
+            }
+        }
+
+        function loadFromLocalStorage() {
+            const localData = localStorage.getItem('eduprime_products');
+            allProducts = localData ? JSON.parse(localData) : [];
+            processRouting();
+        }
+
+        // ================= SPA NAVIGATION LOGIC =================
+        function processRouting() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            document.getElementById('loading').style.display = 'none';
+
+            if (productId) {
+                renderDetailsView(productId);
+            } else {
+                document.getElementById('singleProductView').style.display = 'none';
+                document.getElementById('homeSection').style.display = 'block';
+                
+                const activeBtn = document.querySelector('.filter-btn.active');
+                let type = 'all';
+                if(activeBtn && activeBtn.innerText.includes('কোর্স')) type = 'course';
+                else if(activeBtn && activeBtn.innerText.includes('ই-বুক')) type = 'ebook';
+                else if(activeBtn && activeBtn.innerText.includes('হার্ডকপি')) type = 'hardcopy';
+                
+                renderGrid(type);
+                window.scrollTo(0,0);
+            }
+        }
+
+        // ================= DETAILS LOGIC =================
+        function openDetails(id) {
+            const newUrl = `${window.location.pathname}?id=${id}`;
+            window.history.pushState({path: newUrl}, '', newUrl);
+            renderDetailsView(id);
+        }
+
+        function renderDetailsView(id) {
+            const item = allProducts.find(p => p.id === id);
+            if (!item) {
+                closeDetailsView();
+                return;
+            }
+
+            selectedProductForBuy = item;
+
+            document.getElementById('spImg').src = item.image || 'https://via.placeholder.com/800x400';
+            document.getElementById('spTitle').innerText = item.title;
+            document.getElementById('spType').innerText = getTypeName(item.type);
+            document.getElementById('spCount').innerHTML = item.studentCount ? `<i class="fas fa-user-graduate"></i> ${item.studentCount} জন এনরোল্ড` : '';
+            document.getElementById('spDesc').innerText = item.desc || "বিস্তারিত বিবরণ শীঘ্রই আসছে...";
+
+            let priceHtml = `<span class="price" style="font-size:2rem;">${item.price}</span>`;
+            
+            if (item.discountPrice) {
+                priceHtml = `
+                    <div style="display:flex; flex-direction:column;">
+                        <span class="old-price" style="font-size:1.2rem;">${item.price}</span>
+                        <span class="discount-price" style="font-size:2.2rem;">${item.discountPrice}</span>
+                        <span style="color:var(--accent-red); font-weight:600; font-size:0.9rem;">অফার চলছে!</span>
+                    </div>
+                `;
+            }
+            document.getElementById('spPriceBox').innerHTML = priceHtml;
+
+            document.getElementById('homeSection').style.display = 'none';
+            document.getElementById('singleProductView').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function closeDetailsView() {
+            const newUrl = window.location.pathname;
+            window.history.pushState({path: newUrl}, '', newUrl);
+
+            document.getElementById('singleProductView').style.display = 'none';
+            document.getElementById('homeSection').style.display = 'block';
+            renderGrid('all');
+        }
+
+        // ================= TIMER LOGIC =================
+        setInterval(() => {
+            const timers = document.querySelectorAll('.timer-text');
+            const now = new Date().getTime();
+            timers.forEach(timer => {
+                const deadline = new Date(timer.dataset.end).getTime();
+                const distance = deadline - now;
+                if (distance < 0) {
+                    timer.innerHTML = "অফার শেষ";
+                } else {
+                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+                    timer.innerHTML = `${h}h ${m}m ${s}s`;
+                }
+            });
+        }, 1000);
+
+        // ================= RENDER LOGIC =================
+        function renderGrid(filter) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+            const filtered = filter === 'all' ? allProducts : allProducts.filter(p => p.type === filter);
+
+            if(filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;">কোনো তথ্য পাওয়া যায়নি।</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                let priceHtml = `<span class="price">${item.price}</span>`;
+                let timerHtml = '';
+                let discountBadgeHtml = '';
+
+                if (item.discountPrice) {
+                    const reg = parseFloat(item.price.replace(/[^\d.]/g, ''));
+                    const disc = parseFloat(item.discountPrice.replace(/[^\d.]/g, ''));
+                    
+                    if(reg && disc && reg > disc) {
+                        const percent = Math.round(((reg - disc) / reg) * 100);
+                        discountBadgeHtml = `<span class="discount-badge">SAVE ${percent}%</span>`;
+                    }
+
+                    priceHtml = `
+                        <div class="price-box">
+                            <span class="old-price">${item.price}</span>
+                            <span class="discount-price">${item.discountPrice}</span>
+                        </div>
+                    `;
+
+                    if (item.timerActive && item.discountDeadline) {
+                        const now = new Date().getTime();
+                        const deadline = new Date(item.discountDeadline).getTime();
+                        if (deadline > now) {
+                             timerHtml = `
+                                <div class="timer-badge">
+                                    <i class="fas fa-clock"></i> <span class="timer-text" data-end="${item.discountDeadline}">...</span>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+
+                const countBadge = item.studentCount 
+                    ? `<div class="student-count"><i class="fas fa-user-graduate"></i> ${item.studentCount} জন ভর্তি</div>` 
+                    : `<div class="student-count"><i class="fas fa-star"></i> নতুন</div>`;
+
+                // --- KEY FIX FOR MOBILE CLICK ---
+                const div = document.createElement('div');
+                div.className = 'card';
+                
+                // We use DIRECT property assignment for reliability on mobile
+                div.onclick = function(e) {
+                    // Stop if clicking the edit icon
+                    if(e.target.closest('.edit-icon')) return;
+                    openDetails(item.id);
+                };
+
+                div.innerHTML = `
+                    <div class="edit-icon" onclick="event.stopPropagation(); openEditModal('${item.id}')"><i class="fas fa-pen"></i></div>
+                    <div class="card-img-box">
+                        <span class="badge">${getTypeName(item.type)}</span>
+                        ${discountBadgeHtml}
+                        <img src="${item.image || 'https://via.placeholder.com/300x200?text=No+Image'}" alt="${item.title}">
+                        ${timerHtml}
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">${item.title}</div>
+                        ${countBadge}
+                        <div class="card-footer">
+                            ${priceHtml}
+                            <button class="details-btn-card">বিস্তারিত দেখুন <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // ================= BUY ACTIONS =================
+        function confirmBuySingle() {
+            if(selectedProductForBuy) {
+                const regPrice = selectedProductForBuy.price;
+                const discPrice = selectedProductForBuy.discountPrice;
+                buyNow(selectedProductForBuy.title, regPrice, discPrice, selectedProductForBuy.type);
+            }
+        }
+
+        function buyNow(title, oldPrice, newPrice, type) {
+            const typeName = getTypeName(type);
+            let message = `আসসালামু আলাইকুম, আমি "${title}" এই ${typeName} টি কিনতে চাচ্ছি।\n`;
+            message += `রেগুলার প্রাইস: ${oldPrice}\n`;
+            if(newPrice) message += `ডিসকাউন্ট প্রাইস: ${newPrice}\n`;
+            message += `বিকাশ নাম্বারটি দিলে খুশি হতাম।`;
+            window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // ================= CRUD & HELPERS =================
+        function saveData() {
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('inpTitle').value;
+            const price = document.getElementById('inpPrice').value;
+            
+            if(!title || !price) return alert("শিরোনাম এবং দাম দিন!");
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "সেভ হচ্ছে..."; btn.disabled = true;
+
+            const newData = {
+                title, price,
+                type: document.getElementById('inpType').value,
+                desc: document.getElementById('inpDesc').value,
+                studentCount: document.getElementById('inpCount').value,
+                discountPrice: document.getElementById('inpDiscount').value,
+                discountDeadline: document.getElementById('inpDeadline').value,
+                timerActive: document.getElementById('inpTimerActive').checked,
+                image: currentImgBase64 || "",
+                timestamp: new Date().toISOString()
+            };
+
+            if (!isDummyConfig && db) {
+                const action = id ? db.collection('products').doc(id).update(newData) : db.collection('products').add(newData);
+                action.then(() => finalizeSave("সেভ হয়েছে!")).catch(() => saveToLocal(id, newData));
+            } else {
+                saveToLocal(id, newData);
+            }
+        }
+
+        function saveToLocal(id, data) {
+            let products = JSON.parse(localStorage.getItem('eduprime_products') || "[]");
+            if (id) {
+                const index = products.findIndex(p => p.id === id);
+                if(index !== -1) products[index] = { ...products[index], ...data };
+            } else {
+                data.id = 'local_' + Date.now();
+                products.unshift(data);
+            }
+            localStorage.setItem('eduprime_products', JSON.stringify(products));
+            loadData(); 
+            finalizeSave("সেভ হয়েছে (Local)!");
+        }
+
+        function finalizeSave(msg) {
+            closeModal('editModal');
+            alert(msg);
+            document.getElementById('saveBtn').innerText = "সেভ করুন";
+            document.getElementById('saveBtn').disabled = false;
+        }
+
+        function deleteData() {
+            const id = document.getElementById('editId').value;
+            if(!confirm('সত্যিই ডিলিট করবেন?')) return;
+            
+            if (!isDummyConfig && db && !id.startsWith('local_')) {
+                db.collection('products').doc(id).delete().then(() => { closeModal('editModal'); loadData(); });
+            } else {
+                let products = JSON.parse(localStorage.getItem('eduprime_products') || "[]");
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('eduprime_products', JSON.stringify(products));
+                loadData();
+                closeModal('editModal');
+            }
+        }
+
+        function handleImage(input) {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    currentImgBase64 = e.target.result;
+                    document.getElementById('previewImg').src = currentImgBase64;
+                    document.getElementById('previewImg').style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function checkAdmin() {
+            if(localStorage.getItem('isAdmin') === 'true') {
+                document.body.classList.add('admin-mode');
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'block';
+            }
+        }
+        function handleLogin() {
+            if(document.getElementById('adminEmail').value === ADMIN_EMAIL && document.getElementById('adminPass').value === ADMIN_PASS) {
+                localStorage.setItem('isAdmin', 'true'); checkAdmin(); closeModal('loginModal');
+            } else alert('ভুল তথ্য!');
+        }
+        function logout() { localStorage.removeItem('isAdmin'); location.reload(); }
+
+        function openLoginModal() { document.getElementById('loginModal').classList.add('active'); }
+        function openEditModal(id = null) {
+            const modal = document.getElementById('editModal');
+            document.getElementById('modalTitle').innerText = id ? "এডিট করুন" : "নতুন যোগ করুন";
+            document.getElementById('editId').value = id || "";
+            document.getElementById('deleteBtn').style.display = id ? 'block' : 'none';
+            currentImgBase64 = "";
+            
+            if(id) {
+                const item = allProducts.find(p => p.id === id);
+                document.getElementById('inpTitle').value = item.title;
+                document.getElementById('inpPrice').value = item.price;
+                document.getElementById('inpType').value = item.type;
+                document.getElementById('inpDesc').value = item.desc || "";
+                document.getElementById('inpCount').value = item.studentCount || "";
+                document.getElementById('inpDiscount').value = item.discountPrice || "";
+                document.getElementById('inpDeadline').value = item.discountDeadline || "";
+                document.getElementById('inpTimerActive').checked = item.timerActive === true;
+
+                if(item.image) {
+                    document.getElementById('previewImg').src = item.image;
+                    document.getElementById('previewImg').style.display = 'block';
+                    currentImgBase64 = item.image;
+                }
+            } else {
+                ['inpTitle','inpPrice','inpCount','inpDiscount','inpDeadline','inpDesc'].forEach(i => document.getElementById(i).value = "");
+                document.getElementById('inpTimerActive').checked = false; 
+                document.getElementById('previewImg').style.display = 'none';
+            }
+            modal.classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeBtn').innerHTML = newTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            localStorage.setItem('theme', newTheme);
+        }
+        if(localStorage.getItem('theme') === 'dark') toggleTheme();
+
+        function filterData(type) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderGrid(type);
+        }
+        function getTypeName(type) { return type === 'course' ? 'কোর্স' : type === 'ebook' ? 'ই-বুক' : 'হার্ডকপি'; }
+    </script>
+</body>
+</html>
