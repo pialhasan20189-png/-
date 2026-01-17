@@ -2,8 +2,66 @@
 <html lang="bn" data-theme="light">
 <head>
     <meta charset="UTF-8">
+    <script>
+        (function() {
+            // ১. মাউসের রাইট ক্লিক ডিজেবল
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            }, true);
+
+            // ২. কীবোর্ড শর্টকাট ব্লক (Ctrl+U, Ctrl+F, Ctrl+S, Ctrl+P, F12 ইত্যাদি)
+            document.addEventListener('keydown', function(e) {
+                // Windows এবং Mac উভয়ের জন্য 'Control' বা 'Command' key চেক করা
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 'u': // View Source
+                        case 'f': // Find/Search
+                        case 'g': // Find Next
+                        case 's': // Save Page
+                        case 'p': // Print
+                        case 'c': // Copy (Optional - টেক্সট কপি বন্ধ করতে)
+                        case 'v': // Paste
+                        case 'a': // Select All
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                    }
+                }
+
+                // F12 এবং অন্যান্য ফাংশন কি
+                if (e.keyCode === 123 || // F12
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) // Ctrl+Shift+I/J/C
+                   ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true); // 'true' মানে হলো এটি ক্যাপচার ফেজে কাজ করবে (সবার আগে)
+
+            // ৩. ইমেজ ড্র্যাগ করা বন্ধ
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // ৪. ডেভলপার টুলস ওপেন করলে লুপ চালিয়ে হ্যাং করে দেওয়া (DevTools Trap)
+            setInterval(function() {
+                // কনসোল ক্লিয়ার রাখা
+                try {
+                    console.clear(); 
+                    console.log("%cSECURITY ALERT: Source code is protected.", "color:red; font-size:20px; font-weight:bold;");
+                } catch(e) {}
+
+                // ডিবাগার লুপ (এটি কোড দেখতে বাঁধা দিবে)
+                (function(){
+                    debugger; 
+                })();
+            }, 500);
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC Master Academy</title>
+    <title>EduPrime Pro - ক্যারিয়ার গড়ার সেরা মাধ্যম</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -47,15 +105,33 @@
             --success: #27ae60;
         }
 
-        /* Disable Selection for Security */
+        /* --- CSS SECURITY: Selection Disable --- */
         body { 
             background-color: var(--bg-body); 
             color: var(--text-main); 
             overflow-x: hidden; 
             min-height: 100vh;
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10 and IE 11 */
-            user-select: none; /* Standard syntax */
+            /* টেক্সট সিলেক্ট বন্ধ */
+            -webkit-user-select: none; 
+            -moz-user-select: none;
+            -ms-user-select: none; 
+            user-select: none; 
+        }
+
+        /* ইমেজ সিলেক্ট বা ড্র্যাগ বন্ধ */
+        img {
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+
+        /* প্রিন্ট করলে পেজ সাদা দেখাবে */
+        @media print {
+            html, body {
+                display: none !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Hind Siliguri', sans-serif; transition: background-color 0.3s, color 0.3s; }
@@ -77,6 +153,7 @@
 
         .logo-img {
             height: 45px; width: auto; object-fit: contain; cursor: pointer; display: block;
+            pointer-events: auto; /* Allow logo click */
         }
 
         @media (max-width: 600px) {
@@ -374,7 +451,8 @@
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <nav>
+<body>
+    <nav>
         <div class="nav-left">
             <div class="logo-container">
                 <img id="siteLogo" src="https://via.placeholder.com/150x50?text=Upload+Logo" alt="PC Master Academy" class="logo-img" onclick="closeDetailsView()">
@@ -572,15 +650,6 @@
 
         const isDummyConfig = firebaseConfig.apiKey === "YOUR_API_KEY";
         let db = null;
-
-        // Problem 4: Security (Prevent Inspect/Copy)
-        document.onkeydown = function(e) {
-            if(event.keyCode == 123) { return false; } // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -780,6 +849,13 @@
 
         // ================= SPA NAVIGATION LOGIC =================
         function processRouting() {
+            // FIX: যদি অ্যানালিটিক্স সেকশন ওপেন থাকে, তাহলে পেজ রিফ্রেশ বা অন্য পেজে যাওয়ার দরকার নেই
+            // কারণ রিয়েল টাইম ডাটা আপডেটের জন্য loadData() কল হলে এটি ট্রিগার হয়।
+            if(document.getElementById('analyticsSection').style.display === 'block') {
+                 document.getElementById('loading').style.display = 'none';
+                 return;
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('id');
 
@@ -1187,4 +1263,3 @@
     </script>
 </body>
 </html>
-
