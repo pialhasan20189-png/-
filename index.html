@@ -1354,7 +1354,7 @@
             document.getElementById('spTitle').innerText = item.title;
             const countText = item.type === 'course' ? 'জন এনরোল্ড' : 'জন ক্রয় করেছে';
             document.getElementById('spCount').innerHTML = item.studentCount ? `<i class="fas fa-user-graduate"></i> ${item.studentCount} ${countText}` : '';
-            document.getElementById('spDesc').innerText = item.desc || "বিস্তারিত বিবরণ শীঘ্রই আসছে...";
+            document.getElementById('spDesc').innerHTML = linkify(item.desc || "বিস্তারিত বিবরণ শীঘ্রই আসছে...");
 
             let priceHtml = `<span class="price" style="font-size:2rem;">${item.price}</span>`;
             if (item.discountPrice) {
@@ -1512,6 +1512,14 @@
         if (localStorage.getItem('theme') === 'dark') toggleTheme();
         function filterData(type) { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); renderGrid(type); }
         function getTypeName(type) { return type === 'course' ? 'কোর্স' : type === 'ebook' ? 'ই-বুক' : 'হার্ডকপি'; }
+
+        function linkify(text) {
+            if (!text) return "";
+            var urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, function (url) {
+                return '<a href="' + url + '" target="_blank" style="color:var(--primary); text-decoration:underline;">' + url + '</a>';
+            });
+        }
 
         // Logo Logic
         function loadLogo() {
