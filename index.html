@@ -1169,13 +1169,23 @@
         function loadData() {
             document.getElementById('loading').style.display = 'flex';
             if (db) {
-                db.collection("products").orderBy("timestamp", "desc").onSnapshot(snap => {
+                // FIXED: Added error handling to prevent infinite loading
+                db.collection("products").orderBy("timestamp", "desc").onSnapshot((snap) => {
                     allProducts = [];
                     snap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
                     processRouting();
+                }, (error) => {
+                    console.error("Error loading data:", error);
+                    document.getElementById('loading').style.display = 'none';
+                    // Show error message in grid if permission denied or network error
+                    const grid = document.getElementById('productGrid');
+                    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color: red;">
+                        ডেটা লোড করতে সমস্যা হচ্ছে (Error: ${error.code})। ইন্টারনেট সংযোগ চেক করুন অথবা অ্যাডমিনের সাথে যোগাযোগ করুন।
+                    </div>`;
                 });
             } else {
                 alert("Database Connection Failed! Check Config.");
+                document.getElementById('loading').style.display = 'none';
             }
         }
 
@@ -1301,7 +1311,7 @@
             const filtered = type === 'all' ? allProducts : allProducts.filter(p => p.type === type);
 
             if (filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;">কোনো তথ্য পাওয়া যায়নি।</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;">কোনো তথ্য পাওয়া যায়নি। অনুগ্রহ করে অ্যাডমিন প্যানেল থেকে ডেটা যোগ করুন।</div>';
                 return;
             }
 
@@ -1323,7 +1333,7 @@
                         if (deadline > now) timerHtml = `<div class="timer-badge"><i class="fas fa-clock"></i> <span class="timer-text" data-end="${item.discountDeadline}">...</span></div>`;
                     }
                 }
-                const countText = item.type === 'course' ? 'জন ভর্তি' : 'জন ক্রয় করেছে';
+                const countText = item.type === 'course' ? 'জন ভর্তি' : 'জন ক্রয় করেছে';
                 const countBadge = item.studentCount ? `<div class="student-count"><i class="fas fa-user-graduate"></i> ${item.studentCount} ${countText}</div>` : `<div class="student-count"><i class="fas fa-star"></i> নতুন</div>`;
 
                 const div = document.createElement('div');
@@ -1350,11 +1360,24 @@
             const item = allProducts.find(p => p.id === id);
             if (!item) { closeDetailsView(); return; }
             selectedProductForBuy = item;
-            document.getElementById('spImg').src = item.image || 'https://via.placeholder.com/800x400';
-            document.getElementById('spTitle').innerText = item.title;
-            const countText = item.type === 'course' ? 'জন এনরোল্ড' : 'জন ক্রয় করেছে';
-            document.getElementById('spCount').innerHTML = item.studentCount ? `<i class="fas fa-user-graduate"></i> ${item.studentCount} ${countText}` : '';
-            document.getElementById('spDesc').innerHTML = linkify(item.desc || "বিস্তারিত বিবরণ শীঘ্রই আসছে...");
+
+            const spImg = document.getElementById('spImg');
+            if (spImg.src !== (item.image || 'https://via.placeholder.com/800x400')) spImg.src = item.image || 'https://via.placeholder.com/800x400';
+
+            const spTitle = document.getElementById('spTitle');
+            if (spTitle.innerText !== item.title) spTitle.innerText = item.title;
+
+            const countText = item.type === 'course' ? 'জন এনরোল্ড' : 'জন ক্রয় করেছে';
+            const countHtml = item.studentCount ? `<i class="fas fa-user-graduate"></i> ${item.studentCount} ${countText}` : '';
+            const spCount = document.getElementById('spCount');
+            if (spCount.innerHTML !== countHtml) spCount.innerHTML = countHtml;
+
+            const spDesc = document.getElementById('spDesc');
+            // Use dataset to store raw description for comparison
+            if (spDesc.dataset.raw !== (item.desc || "")) {
+                spDesc.innerHTML = linkify(item.desc || "বিস্তারিত বিবরণ শীঘ্রই আসছে...");
+                spDesc.dataset.raw = item.desc || "";
+            }
 
             let priceHtml = `<span class="price" style="font-size:2rem;">${item.price}</span>`;
             if (item.discountPrice) {
@@ -1367,10 +1390,18 @@
                 }
                 priceHtml = `<div style="display:flex; flex-direction:column;"><span class="old-price" style="font-size:1.2rem;">${item.price}</span><div style="display:flex; gap: 10px; align-items: center;"><span class="discount-price" style="font-size:2.2rem;">${item.discountPrice}</span>${discountBadgeHtml}</div><span style="color:#ff0000; font-weight:600; font-size:0.9rem;">অফার চলছে!</span></div>`;
             }
-            document.getElementById('spPriceBox').innerHTML = priceHtml;
+
+            const spPriceBox = document.getElementById('spPriceBox');
+            if (spPriceBox.innerHTML !== priceHtml) spPriceBox.innerHTML = priceHtml;
+
             document.getElementById('homeSection').style.display = 'none';
-            document.getElementById('singleProductView').style.display = 'block';
-            window.scrollTo(0, 0);
+
+            const view = document.getElementById('singleProductView');
+            // Only scroll to top if we are entering the view (it was hidden)
+            if (view.style.display !== 'block') {
+                window.scrollTo(0, 0);
+            }
+            view.style.display = 'block';
         }
 
         function closeDetailsView() {
